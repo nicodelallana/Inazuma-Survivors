@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#071015">
+    <title>Inazuma Survivors – Roguelike de Fútbol Anime</title>
+    <link rel="preload" href="assets/inazuma/ui/inapixel.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-root" id="app-root">
+      <!-- ==================== MENÚ LATERAL (SIDEBAR) ==================== -->
+      <aside class="app-sidebar" id="app-sidebar">
+        <!-- Encabezado de la barra lateral -->
+        <div class="sidebar-brand">
+          <span class="brand-thunder">⚡</span>
+          <div class="brand-titles">
+            <span class="brand-title">INAZUMA <b>SURVIVORS</b></span>
+            <span class="brand-sub">FÚTBOL FRONTIER</span>
+          </div>
+        </div>
+
+        <!-- TARJETA DESTACADA DEL CAPITÁN SELECCIONADO (GRANDE Y CLARA) -->
+        <div class="captain-spotlight-card" id="captain-spotlight-card">
+          <div class="spotlight-header">
+            <span class="spotlight-tag">CAPITÁN TITULAR</span>
+            <span class="spotlight-role-badge" id="sidebar-captain-role">POR</span>
+          </div>
+
+          <div class="spotlight-avatar-box" id="sidebar-captain-avatar"></div>
+
+          <div class="spotlight-details">
+            <h2 class="spotlight-name" id="sidebar-captain-name">Mark Evans</h2>
+            <div class="spotlight-elem-tag" id="sidebar-captain-elem">⛰️ Elemento Montaña</div>
+            <div class="spotlight-stats-grid">
+              <div class="stat-cell">
+                <span>ENERGÍA</span>
+                <strong id="sidebar-stat-hp">100 HP</strong>
+              </div>
+              <div class="stat-cell">
+                <span>VELOCIDAD</span>
+                <strong id="sidebar-stat-speed">210</strong>
+              </div>
+            </div>
+            <div class="spotlight-tech-bar">
+              <span class="tech-icon">✦</span>
+              <span class="tech-text" id="sidebar-stat-tech">Chut Granada</span>
+            </div>
+          </div>
+
+          <!-- BOTÓN PRINCIPAL PARA SALTAR AL CAMPO -->
+          <button type="button" class="btn-play-game" id="btn-sidebar-play">
+            <span>¡SALTAR AL CAMPO!</span>
+            <span class="play-arrow">⚽ ➔</span>
+          </button>
+        </div>
+
+        <!-- SELECTOR RÁPIDO DE JUGADORES DESBLOQUEADOS EN EL MENÚ LATERAL -->
+        <div class="sidebar-roster-section">
+          <div class="sidebar-section-header">
+            <strong>ELEGIR JUGADOR</strong>
+            <span class="roster-count-badge" id="sidebar-unlocked-count">3 disponibles</span>
+          </div>
+          <div class="sidebar-roster-scroll" id="sidebar-quick-players">
+            <!-- Se pueblan dinámicamente las tarjetas de jugadores desbloqueados con sprites grandes -->
+          </div>
+        </div>
+
+        <!-- NAVEGACIÓN DEL MENÚ LATERAL -->
+        <nav class="sidebar-nav">
+          <button type="button" class="sidebar-nav-btn active" data-screen="menu">
+            <span class="nav-icon">⚽</span>
+            <span class="nav-text">Lobby / Partido</span>
+          </button>
+          <button type="button" class="sidebar-nav-btn" data-screen="gacha">
+            <span class="nav-icon">🎴</span>
+            <span class="nav-text">Sobres de Fichaje</span>
+          </button>
+          <button type="button" class="sidebar-nav-btn" data-screen="album">
+            <span class="nav-icon">📖</span>
+            <span class="nav-text">Álbum y Equipos</span>
+          </button>
+          <button type="button" class="sidebar-nav-btn" data-screen="upgrades">
+            <span class="nav-icon">⚡</span>
+            <span class="nav-text">Entrenamiento (Dojo)</span>
+          </button>
+          <button type="button" class="sidebar-nav-btn" data-screen="guide">
+            <span class="nav-icon">❓</span>
+            <span class="nav-text">Guía y Controles</span>
+          </button>
+        </nav>
+
+        <!-- PIE DEL MENÚ LATERAL: DIVISAS Y SONIDO -->
+        <div class="sidebar-footer">
+          <div class="sidebar-currencies">
+            <div class="cur-pill tickets" title="Tickets de Sobre">
+              <span>🎫</span> <b id="sidebar-tickets">5</b>
+            </div>
+            <div class="cur-pill coins" title="Puntos Inazuma">
+              <span>🪙</span> <b id="sidebar-coins">300</b>
+            </div>
+          </div>
+          <button type="button" class="sidebar-sound-btn" id="sidebar-sound-btn" title="Silenciar / Activar sonido" aria-label="Audio">
+            <span id="sidebar-sound-icon">♫</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- ==================== ÁREA PRINCIPAL / VIEWPORT Y PANTALLAS ==================== -->
+      <main class="app-main-area" id="app-main-area">
+        <!-- Canvas del partido -->
+        <canvas id="game-canvas" width="960" height="600" aria-label="Campo de juego"></canvas>
+
+        <!-- HUD interactivo durante el partido (coordenadas de pantalla sobre el canvas) -->
+        <div class="in-game-hud" id="in-game-hud" hidden>
+          <!-- Barra superior de Experiencia completa -->
+          <div class="hud-xp-wrapper">
+            <div class="hud-level-badge">
+              <span>NV</span>
+              <strong id="hud-level-val">01</strong>
+            </div>
+            <div class="hud-xp-track">
+              <div class="hud-xp-bar" id="hud-xp-fill" style="width: 0%;"></div>
+            </div>
+            <span class="hud-xp-counter" id="hud-xp-text">0 / 5 XP</span>
+          </div>
+
+          <!-- Marcador central superior -->
+          <div class="hud-scoreboard-bar">
+            <!-- Info del capitán y barra de energía -->
+            <div class="hud-player-box">
+              <div class="hud-avatar-frame" id="hud-avatar-box"></div>
+              <div class="hud-player-vitals">
+                <div class="hud-captain-title">
+                  <strong id="hud-captain-name">MARK EVANS</strong>
+                  <span class="hud-captain-role" id="hud-captain-role">POR</span>
+                </div>
+                <div class="hud-health-track">
+                  <div class="hud-health-lag" id="hud-health-lag" style="width: 100%;"></div>
+                  <div class="hud-health-bar" id="hud-health-fill" style="width: 100%;"></div>
+                </div>
+                <span class="hud-health-numeric" id="hud-health-text">100 / 100</span>
+              </div>
+            </div>
+
+            <!-- Cronómetro de partido -->
+            <div class="hud-clock-box">
+              <span class="clock-label">TIEMPO</span>
+              <strong class="clock-value" id="hud-clock-val">01:30</strong>
+            </div>
+
+            <!-- Contadores de partido (remates, oleada, monedas ganadas) -->
+            <div class="hud-metrics-box">
+              <div class="metric-item">
+                <span class="m-label">REMATES</span>
+                <strong class="m-val" id="hud-kills-val">⚽ 00</strong>
+              </div>
+              <div class="metric-item">
+                <span class="m-label">OLEADA</span>
+                <strong class="m-val" id="hud-wave-val">01</strong>
+              </div>
+              <div class="metric-item">
+                <span class="m-label">BOTÍN</span>
+                <strong class="m-val" id="hud-loot-val">🪙 0</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Barra de supertécnicas inferior -->
+          <div class="hud-techniques-dock">
+            <div class="tech-slot" id="tech-slot-primary" title="Chut básico automático">
+              <span class="tech-slot-key">AUTO</span>
+              <span class="tech-slot-icon">⚽</span>
+              <div class="tech-slot-info">
+                <strong>CHUT BÁSICO</strong>
+                <small>Disparo continuo</small>
+              </div>
+            </div>
+
+            <div class="tech-slot active-tech" id="tech-slot-special" title="Activar con ESPACIO">
+              <span class="tech-slot-key">ESPACIO</span>
+              <span class="tech-slot-icon" id="tech-special-icon">✦</span>
+              <div class="tech-slot-info">
+                <strong id="tech-special-name">CHUT GRANADA</strong>
+                <small id="tech-special-status">LISTA</small>
+              </div>
+              <div class="tech-cooldown-overlay" id="tech-cooldown-overlay"></div>
+            </div>
+
+            <div class="hud-controls-hint">
+              <span class="key-hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> MOVER</span>
+              <span class="key-hint"><kbd>ESPACIO</kbd> SUPERTÉCNICA</span>
+              <span class="key-hint"><kbd>ESC</kbd> PAUSA</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Capas de pantallas (Gacha, Álbum, Dojo, Guía, Modales) -->
+        <div class="screens-overlay-container" id="screens-overlay">
+          <!-- Pantalla 1: Vista General / Lobby -->
+          <section class="modal-box screen-panel" id="scr-menu" hidden>
+            <div class="box-inner">
+              <div class="menu-hero">
+                <span class="hero-kicker">⚡ TORNEO FÚTBOL FRONTIER</span>
+                <h1 class="hero-title">INAZUMA<br><em>SURVIVORS</em></h1>
+                <p class="hero-desc">Usa el menú lateral para elegir a tu capitán entre tus jugadores desbloqueados, abrir sobres o mejorar tus atributos. ¡El campo infinito te espera!</p>
+              </div>
+              <div class="menu-hero-actions">
+                <button type="button" class="btn-primary-action" id="btn-hero-play">
+                  <span>¡SALTAR AL CAMPO!</span>
+                  <span class="arrow-glyph">⚽ ➔</span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Pantalla 2: Gacha / Apertura de Sobres 2D -->
+          <section class="modal-box screen-panel wide" id="scr-gacha" hidden>
+            <div class="box-inner">
+              <div class="panel-header-row">
+                <div>
+                  <span class="hero-kicker">FICHAJES DE ÉLITE</span>
+                  <h2>SOBRES DE JUGADORES</h2>
+                </div>
+                <button type="button" class="btn-close-panel" data-back-to-menu>VOLVER AL LOBBY ✕</button>
+              </div>
+
+              <!-- Pestañas de Banners -->
+              <div class="banner-tabs-row" id="gacha-banner-tabs"></div>
+
+              <!-- Banner activo y visual del sobre -->
+              <div class="gacha-showcase-split">
+                <div class="banner-hero-card" id="banner-hero-card">
+                  <div class="banner-badge-box">
+                    <img id="banner-crest-img" src="assets/inazuma/ui/crest1.png" alt="Crest">
+                    <div>
+                      <h3 id="banner-title-text">Instituto Raimon Clásico</h3>
+                      <p id="banner-sub-text">Consigue a Mark Evans, Axel Blaze, Jude Sharp y los héroes del Raimon.</p>
+                    </div>
+                  </div>
+
+                  <!-- Representación 2D previa del Sobre -->
+                  <div class="pack-preview-display" id="pack-preview-click">
+                    <div class="preview-booster-pack">
+                      <div class="preview-foil-top"></div>
+                      <div class="preview-pack-content">
+                        <span class="preview-pack-logo">⚡ INAZUMA SURVIVORS</span>
+                        <div class="preview-pack-center">
+                          <img src="assets/inazuma/ui/crest1.png" class="preview-crest" alt="">
+                          <strong>SOBRE DE FICHAJE</strong>
+                        </div>
+                        <span class="preview-pack-footer">★ EDICIÓN FÚTBOL FRONTIER ★</span>
+                      </div>
+                      <div class="preview-foil-bottom"></div>
+                      <div class="preview-shine-bar"></div>
+                    </div>
+                    <span class="pack-touch-hint">✨ ¡TOCA PARA ABRIR! ✨</span>
+                  </div>
+
+                  <!-- Botones de compra / apertura de sobres -->
+                  <div class="pack-pull-buttons-row">
+                    <button type="button" class="btn-pull-pack gold" id="btn-pull-1">
+                      <span>ABRIR 1 SOBRE (3 cartas)</span>
+                      <small>Coste: 🎫 1 Ticket o 🪙 100 Pts</small>
+                    </button>
+                    <button type="button" class="btn-pull-pack gold pulse-glow" id="btn-pull-5">
+                      <span>ABRIR SOBRE x5 (5 cartas)</span>
+                      <small>★ Rara garantizada · 🎫 5 o 🪙 450</small>
+                    </button>
+                    <button type="button" class="btn-pull-pack gold special" id="btn-pull-10">
+                      <span>PACK ESPECIAL x10</span>
+                      <small>★ ÉPICA garantizada · 🎫 10 o 🪙 900</small>
+                    </button>
+                  </div>
+
+                  <p class="gacha-pity-counter" id="gacha-pity-text">Tiradas para carta 5★ Legendaria garantizada: 0 / 20</p>
+                </div>
+
+                <!-- Tabla de probabilidades y notas -->
+                <div class="gacha-rates-panel">
+                  <h4>PROBABILIDADES</h4>
+                  <div class="rates-list">
+                    <div class="rate-row r5"><span>★★★★★ Legendario</span><strong>1.0%</strong></div>
+                    <div class="rate-row r4"><span>★★★★ Épico</span><strong>5.0%</strong></div>
+                    <div class="rate-row r3"><span>★★★ Raro</span><strong>14.0%</strong></div>
+                    <div class="rate-row r2"><span>★★ Infrecuente</span><strong>30.0%</strong></div>
+                    <div class="rate-row r1"><span>★ Común</span><strong>50.0%</strong></div>
+                  </div>
+                  <ul class="rates-notes">
+                    <li>• ¡Los jugadores desbloqueados aparecen en el menú lateral para equiparlos de inmediato!</li>
+                    <li>• Los repetidos otorgan +50 Puntos Inazuma.</li>
+                    <li>• Animación interactiva 2D con rasgado de sobre y destello de luz.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Pantalla 3: Álbum y Colección de Equipos (CON TARJETAS GRANDES Y CLARAS) -->
+          <section class="modal-box screen-panel wide" id="scr-album" hidden>
+            <div class="box-inner">
+              <div class="panel-header-row">
+                <div>
+                  <span class="hero-kicker">ÁLBUM DE CROMOS OFICIAL</span>
+                  <h2>JUGADORES Y EQUIPOS</h2>
+                  <p class="collection-counter-tag" id="album-counter-text">0 de 2531 jugadores conseguidos</p>
+                </div>
+                <button type="button" class="btn-close-panel" data-back-to-menu>VOLVER AL LOBBY ✕</button>
+              </div>
+
+              <!-- Pestañas de filtrado de equipos (con escudos grandes) -->
+              <div class="team-filter-bar" id="album-team-filters"></div>
+
+              <!-- Rejilla de cartas del equipo seleccionado (tarjetas grandes y legibles) -->
+              <div class="album-players-grid large-cards" id="album-players-grid"></div>
+            </div>
+          </section>
+
+          <!-- Pantalla 4: Dojo / Entrenamiento y Mejoras Permanentes -->
+          <section class="modal-box screen-panel" id="scr-upgrades" hidden>
+            <div class="box-inner">
+              <div class="panel-header-row">
+                <div>
+                  <span class="hero-kicker">DOJO DE ENTRENAMIENTO</span>
+                  <h2>MEJORAS PERMANENTES</h2>
+                  <p class="panel-sub">Estas mejoras potencian a todos tus capitanes en cada partido.</p>
+                </div>
+                <button type="button" class="btn-close-panel" data-back-to-menu>VOLVER AL LOBBY ✕</button>
+              </div>
+
+              <div class="upgrades-list-container" id="meta-upgrades-container"></div>
+            </div>
+          </section>
+
+          <!-- Pantalla 5: Guía y Controles -->
+          <section class="modal-box screen-panel" id="scr-guide" hidden>
+            <div class="box-inner">
+              <div class="panel-header-row">
+                <div>
+                  <span class="hero-kicker">MANUAL DE JUEGO</span>
+                  <h2>CÓMO JUGAR</h2>
+                </div>
+                <button type="button" class="btn-close-panel" data-back-to-menu>VOLVER AL LOBBY ✕</button>
+              </div>
+
+              <div class="guide-content-box">
+                <div class="guide-section">
+                  <h4>⚽ CAMPO INFINITO</h4>
+                  <p>El mapa no tiene límites de paredes. Puedes correr libremente en cualquier dirección por el gran complejo deportivo. Encontrarás balones repartidos por el césped: ¡corre hacia ellos para chutarlos y reventar a los rivales!</p>
+                </div>
+                <div class="guide-section">
+                  <h4>⚡ SUPERTÉCNICAS</h4>
+                  <p>Pulsa <kbd>ESPACIO</kbd> para lanzar tu supertécnica cuando el indicador esté listo. Cada técnica tiene radio, daño y efectos elementales (Fuego, Viento, Bosque, Montaña).</p>
+                </div>
+                <div class="guide-section">
+                  <h4>🎴 APERTURA DE SOBRES (GACHA)</h4>
+                  <p>Al derrotar capitanes rivales conseguirás Tickets de Sobre y Monedas. Abre sobres para desbloquear a leyendas como Axel Blaze, Jude Sharp o Shawn Froste y ponlos de capitán desde el menú lateral.</p>
+                </div>
+                <div class="guide-section">
+                  <h4>🥤 OBJETOS DEL CAMPO</h4>
+                  <p>Destruye muñecos de entrenamiento para ganar experiencia rápida y recoge bebidas isotónicas para recuperar energía.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Modal durante el juego: Subida de Nivel (Level Up) -->
+          <section class="modal-box levelup-modal" id="scr-levelup" hidden>
+            <div class="box-inner center-text">
+              <span class="hero-kicker gold-glow">¡NIVEL ALCANZADO!</span>
+              <h2 class="levelup-title">ELIGE TU <em id="levelup-title-num">MEJORA</em></h2>
+              <p class="panel-sub">Selecciona una supertécnica o ventaja para el partido:</p>
+
+              <div class="levelup-cards-grid" id="levelup-choices-grid"></div>
+            </div>
+          </section>
+
+          <!-- Modal durante el juego: Pausa -->
+          <section class="modal-box pause-modal" id="scr-pause" hidden>
+            <div class="box-inner center-text">
+              <span class="hero-kicker">TIEMPO FUERA</span>
+              <h2>PARTIDO EN PAUSA</h2>
+              <p class="panel-sub">El árbitro ha detenido el tiempo.</p>
+
+              <div class="pause-actions-col">
+                <button type="button" class="btn-primary-action" id="btn-resume-run">REANUDAR PARTIDO ➔</button>
+                <button type="button" class="btn-secondary-action" id="btn-abandon-run">ABANDONAR PARTIDO ✕</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Modal de Fin de Partido (Victoria o Derrota) -->
+          <section class="modal-box result-modal" id="scr-result" hidden>
+            <div class="box-inner center-text">
+              <span class="hero-kicker" id="result-kicker-tag">FIN DEL PARTIDO</span>
+              <h2 id="result-title-text">ACTA DEL PARTIDO</h2>
+              <p class="panel-sub" id="result-subtitle-text">Estadísticas finales de tu capitán:</p>
+
+              <div class="match-summary-stats" id="match-summary-stats"></div>
+
+              <div class="result-actions-row">
+                <button type="button" class="btn-primary-action" id="btn-restart-run">JUGAR OTRA VEZ ⚽</button>
+                <button type="button" class="btn-secondary-action" id="btn-result-to-gacha">ABRIR SOBRES CON EL BOTÍN 🎴</button>
+                <button type="button" class="btn-secondary-action" id="btn-result-to-menu">VOLVER AL LOBBY</button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Escenario de apertura de sobres en 2D (Fullscreen Modal) -->
+        <div class="pack-opening-modal-layer hidden" id="pack-opening-modal-layer"></div>
+      </main>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
